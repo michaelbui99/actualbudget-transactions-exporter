@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as api from '@actual-app/api';
 import * as fs from "fs";
 import * as path from "path";
@@ -12,6 +14,9 @@ program
     .option("--url <url>", "Actual server URL")
     .option("--password <password>", "password")
     .option("--syncId <syncId>", "Budget sync ID")
+    .option("--accountId <accountId>", "Account ID")
+    .option("--outDir <outDir>", "Where to output the transactions file")
+    .option("-y, --yes", "Accept export of transactions")
     .action(async (options) => {
         let password: string = options.password || await promptPassword({ message: "ActualBudget password" });
         let url: string = options.url || await input({ message: "ActualBudget server URL" }) || "https://actual.michaelbui.dk";
@@ -20,8 +25,7 @@ program
         await api.init({
             serverURL: url,
             password: password,
-        })
-
+        });
         await api.downloadBudget(syncId);
 
         const accounts = await api.getAccounts() || [];
@@ -31,32 +35,42 @@ program
             return;
         }
 
-        const account = await select({
+        const accountId = options.accountId || await select({
             message: "Select account",
             choices: accounts.map(account => {
                 return {
                     name: account.name,
-                    value: account,
+                    value: account.id,
                 }
             })
         });
 
-        const transactions = await api.getTransactions(account.id, '1999-01-01', '3000-12-12');
+        const transactions = await api.getTransactions(accountId, '1999-01-01', '3000-12-12');
         console.log(chalk.blue(`${transactions.length} transactions has been retrieved`));
-        let exportFileName = `${account.id}-${format(new Date(), "dd-MM-yyyy")}.json`;
 
+        let exportFileName = `${accountId}-${format(new Date(), "yyyy-MM-dd")}.json`;
         let validExportPath = undefined;
-        while (!validExportPath) {
-            const exportPath = await input({ message: "Which directory should the transactions be exported to?" });
-            let resolvedExportPath = path.resolve(exportPath);
+        if (options.outDir) {
+            let resolvedExportPath = path.resolve(options.outDir);
             if (!fs.statSync(resolvedExportPath).isDirectory()) {
-                console.log(chalk.red("Provided path is not a directory."))
+                console.log(chalk.red("Provided path is not a directory. Exitting..."))
+                return;
             } else {
                 validExportPath = path.join(resolvedExportPath, exportFileName);
             }
+        } else {
+            while (!validExportPath) {
+                const exportPath = await input({ message: "Which directory should the transactions be exported to?" });
+                let resolvedExportPath = path.resolve(exportPath);
+                if (!fs.statSync(resolvedExportPath).isDirectory()) {
+                    console.log(chalk.red("Provided path is not a directory."))
+                } else {
+                    validExportPath = path.join(resolvedExportPath, exportFileName);
+                }
+            }
         }
 
-        const doExport = await confirm({message: chalk.black(`Export ${transactions.length} transactions to ${validExportPath}?`)});
+        const doExport = options.yes || await confirm({ message: chalk.black(`Export ${transactions.length} transactions to ${validExportPath}?`) });
         if (doExport) {
             fs.writeFileSync(validExportPath, JSON.stringify(transactions), "utf8");
             console.log(chalk.green(`Transactions has been exported to ${validExportPath}!`));

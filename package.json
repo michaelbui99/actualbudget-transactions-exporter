@@ -3,16 +3,21 @@
   "version": "0.1.0",
   "main": "index.js",
   "bin": {
-    "actual-exporter": "./dist/index.js"
+    "actual-transactions-exporter": "./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michaelbui99/actualbudget-transactions-exporter.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --build",
     "clean": "tsc --build --clean && node ./build/rm.js ./dist",
     "predev": "npm run clean && npm run build",
-    "dev": "node ./dist/index.js"
+    "dev": "node ./dist/index.js",
+    "setup": "npm run clean && npm run build && sudo npm link"
   },
-  "author": "",
+  "author": "Michael Bui",
   "license": "ISC",
   "description": "",
   "dependencies": {
