@@ -1,0 +1,30 @@
+{
+  "name": "actual-transactions-exporter",
+  "version": "0.1.0",
+  "main": "index.js",
+  "bin": {
+    "actual-exporter": "./dist/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --build",
+    "clean": "tsc --build --clean && node ./build/rm.js ./dist",
+    "predev": "npm run clean && npm run build",
+    "dev": "node ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@actual-app/api": "^25.10.0",
+    "@inquirer/prompts": "^7.9.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.1",
+    "date-fns": "^4.1.0",
+    "inquirer": "^12.10.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1"
+  }
+}
